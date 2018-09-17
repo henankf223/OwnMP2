@@ -1,0 +1,32 @@
+
+# PYTHONPATH must include directory above plugin directory.
+#     Define either externally or here, then import plugin.
+sys.path.insert(0, './..')
+import ownmp2
+
+molecule {
+O
+H 1 R
+H 1 R 2 A
+
+R = .9
+A = 104.5
+symmetry c1
+}
+
+set {
+  basis sto-3g
+  scf_type pk
+  mp2_type conv
+}
+
+set ownmp2 {
+  print 1
+  reference hf_default
+  ROTATE_INT calculate
+}
+
+energy('ownmp2')
+energy('mp2')
+
+ownmp2.exampleFN()
