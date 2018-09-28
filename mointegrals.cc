@@ -205,6 +205,7 @@ extern "C" PSI_API SharedWavefunction ownmp2(SharedWavefunction ref_wfn,
 	  outfile->Printf(
 		  "\n Calculate integrals based on AOint and Ca. \n");
 	  Ca->print();
+	  /*
     for (int p = 0; p < nmo; ++p) {
       for (int q = 0; q < nmo; ++q) {
         for (int r = 0; r < nmo; ++r) {
@@ -225,6 +226,47 @@ extern "C" PSI_API SharedWavefunction ownmp2(SharedWavefunction ref_wfn,
         }
       }
     }
+	*/
+	
+	int i, j, k, l;
+
+	SharedMatrix X(new Matrix(nmo, nmo));
+	SharedMatrix TMP(new Matrix((nmo*nmo), (nmo*nmo)));
+
+	for (i = 0; i < nmo; ++i) {
+		for (j = 0; j < nmo; ++j) {
+			for (k = 0; k < nmo; ++k) {
+				for (l = 0; l < nmo; ++l) {
+					X->set(k, l, ao_int_index(TEI, i, j, k, l, nmo));
+					//X->set(l, k, ao_int_index(TEI, i, j, k, l, nmo));
+				}
+			}
+			X->transform(Ca);
+			for (k = 0; k < nmo; ++k) {
+				for (l = 0; l < nmo; ++l) {
+					TMP->set(k*nmo+l, i*nmo+j, X->get(k, l));
+				}
+			}
+		}
+	}
+
+	for (k = 0; k < nmo; ++k) {
+		for (l = 0; l < nmo; ++l) {
+			X->zero();
+			for (i = 0; i < nmo; ++i) {
+				for (j = 0; j < nmo; ++j) {
+					X->set(i, j, TMP->get(k*nmo+l, i*nmo+j));
+					//X->set(l, k, TMP->get(kl, ij));
+				}
+			}
+			X->transform(Ca);
+			for (i = 0; i < nmo; ++i) {
+				for (j = 0; j < nmo; ++j) {
+					mo_ints[four_idx(k, l, i, j, nmo)] = X->get(i, j);
+				}
+			}
+		}
+	}
   }
 
   // 2. Build the antisymmetrized two-electron integrals in a spin orbital basis
